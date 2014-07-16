@@ -58,28 +58,28 @@ void generation() {
 
   for (int x=0; x<8; x++) {
     for (int y=0; y<8; y++) { 
-      int neighbours = 0; // count neighbours
-      for (int xx=x-1; xx<=x+1; xx++) {
-        for (int yy=y-1; yy<=y+1; yy++) {          
-          if (((xx >=0) && (xx<8)) && ( (yy >=0) && (yy < 8) )) {
-            if ((xx!=x) || (yy!=y)) {
-              if (cellsBuffer[xx][yy] == 1) {
-                neighbours++; 
-              }
-            }
-          }
-        } // end of yy
-      } // end of xx
-      if (cellsBuffer[x][y] == 1) { // alive
-        if (neighbours < 2 || neighbours > 3) {
-          cells[x][y] = 0;
-        }
-      } else { // dead
-        if (neighbours == 3) {
-          cells[x][y] = 1;
-        }
+      // Count live neighbouring cells, with wrap-around
+      int xm1 = (x-1)%8;  // "x minus 1" -- with wrap-around
+      int xp1 = (x+1)%8;  // "x plus  1" -- with wrap-around
+      int ym1 = (y-1)%8;
+      int yp1 = (y+1)%8;
+      int neighbours = cells[xm1][yp1] + cells[x][yp1] + cells[xp1][yp1];
+      neighbours    += cells[xm1][y]                   + cells[xp1][y];
+      neighbours    += cells[xm1][ym1] + cells[x][ym1] + cells[xp1][ym1];
+
+      if (cellsBuffer[x][y] == 1) { 
+        // Current cell is alive
+        if (neighbours < 2 || neighbours > 3) {cells[x][y] = 0;}
+      } else { 
+        // Current cell is dead
+        if (neighbours == 3) {cells[x][y] = 1;}
       } // end of if
     }
+  }
+  generations++;
+  if (serialDebugging) {
+    Serial.print("generation: ");
+    Serial.println(generations);
   }
   generations++;
 }
