@@ -33,12 +33,12 @@ void loop() {
     generations = 1;
   }
 
-  // update game state
-  generation();
-
   // write cell contents to LED matrix
   showCells();
   
+  // update game state
+  generation();
+ 
   // check if current generation is different from previous one
   repeated = repeatedScreen();
   
@@ -59,27 +59,28 @@ void generation() {
   for (int x=0; x<8; x++) {
     for (int y=0; y<8; y++) { 
       // Count live neighbouring cells, with wrap-around
-      int xm1 = (x-1)%8;  // "x minus 1" -- with wrap-around
-      int xp1 = (x+1)%8;  // "x plus  1" -- with wrap-around
-      int ym1 = (y-1)%8;
-      int yp1 = (y+1)%8;
-      int neighbours = cells[xm1][yp1] + cells[x][yp1] + cells[xp1][yp1];
-      neighbours    += cells[xm1][y]                   + cells[xp1][y];
-      neighbours    += cells[xm1][ym1] + cells[x][ym1] + cells[xp1][ym1];
-
+      int xm1 = (x-1+8)%8;  // "x minus 1" -- with wrap-around
+      int xp1 = (x+1+8)%8;  // "x plus  1" -- with wrap-around
+      int ym1 = (y-1+8)%8;
+      int yp1 = (y+1+8)%8;
+      int neighbours = cellsBuffer[xm1][yp1] + cellsBuffer[x][yp1] + cellsBuffer[xp1][yp1];
+      neighbours    += cellsBuffer[xm1][y]                         + cellsBuffer[xp1][y];
+      neighbours    += cellsBuffer[xm1][ym1] + cellsBuffer[x][ym1] + cellsBuffer[xp1][ym1];
+      //Serial.println("Cell (x,y)=("+String(x)+","+String(y)+"): brackets ["+String(xm1)+",x,"+String(xp1)+"], ["+String(ym1)+",y,"+String(yp1)+"], Neighbours: "+String(neighbours));
       if (cellsBuffer[x][y] == 1) { 
         // Current cell is alive
-        if (neighbours < 2 || neighbours > 3) {cells[x][y] = 0;}
+        if (neighbours < 2 || neighbours > 3) {
+          //Serial.println("Cell (x,y)=("+String(x)+","+String(y)+") dies");
+          cells[x][y] = 0;
+          }
       } else { 
         // Current cell is dead
-        if (neighbours == 3) {cells[x][y] = 1;}
+        if (neighbours == 3) {
+          //Serial.println("Cell (x,y)=("+String(x)+","+String(y)+") is born");
+          cells[x][y] = 1;
+          }
       } // end of if
     }
-  }
-  generations++;
-  if (serialDebugging) {
-    Serial.print("generation: ");
-    Serial.println(generations);
   }
   generations++;
 }
@@ -100,6 +101,18 @@ void startGame() {
       state > 35 ? state = 0 : state = 1; // probability of cell being alive at start
       cells[x][y] = state;
     }
+  }
+  
+  if (serialDebugging) {
+    // Start a glider
+    cells[0] = {0,0,0,0,0,0,0,0};
+    cells[1] = {0,0,0,0,0,0,0,0};
+    cells[2] = {0,0,0,0,0,1,0,0};
+    cells[3] = {0,0,0,0,0,0,1,0};
+    cells[4] = {0,0,0,0,1,1,1,0};
+    cells[5] = {0,0,0,0,0,0,0,0};
+    cells[6] = {0,0,0,0,0,0,0,0};
+    cells[7] = {0,0,0,0,0,0,0,0};
   }
 }
 
